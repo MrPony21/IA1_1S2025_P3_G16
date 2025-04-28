@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clase 9- Three.js</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+
+<body>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.138.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.138.0/examples/js/loaders/GLTFLoader.js"></script>
+  <script>
+    let scena = new THREE.Scene();
+    let camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+    let renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // let geometry = new THREE.BoxGeometry(1, 1, 1);
+    // let material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+    // let cube = new THREE.Mesh(geometry, material);
+    // scena.add(cube);
+    const ambientLight = new THREE.AmbientLight(0x404040, 3); // luz general tenue
+    scena.add(ambientLight);
+
+    const loader = new THREE.GLTFLoader();
+    let gltfModel = null;
+    let charac;
+    loader.load('Bob.glb', function(gltf){
+        gltfModel = gltf.scene
+      scena.add(gltf.scene);
+    });
+
+    camera.position.z = 4;
+    camera.position.y = 0.5
+
+    function render() {
+        if (gltfModel) {
+            //gltfModel.rotation.x += 0.01;
+            gltfModel.rotation.y += 0.01;
+        }
+
+        requestAnimationFrame(render);
+        renderer.render(scena, camera);
+    }
+    render();
+  </script>
+</body>
+
+</html>
