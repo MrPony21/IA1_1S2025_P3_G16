@@ -8,36 +8,65 @@ document.body.appendChild(renderer.domElement);
 const ambientLight = new THREE.AmbientLight(0x404040, 3);
 scena.add(ambientLight);
 
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+directionalLight.position.set(5, 10, 7);
+scena.add(directionalLight);
+
 const loader = new THREE.GLTFLoader();
 let gltfModel = null;
-loader.load('Bob.glb', function (gltf) {
-  gltfModel = gltf.scene;
-  scena.add(gltf.scene);
+loader.load('car.glb', function (gltf) {
+    gltfModel = gltf.scene;
+    gltfModel.scale.set(0.1, 0.1, 0.1);
+    scena.add(gltf.scene);
 });
+
+const loader2 = new THREE.GLTFLoader();
+let gltfModel2 = null;
+loader.load('cityWall2.glb', function(gltf) {
+    gltfModel2 = gltf.scene;
+    gltfModel2.scale.set(0.5, 0.5, 0.5);
+    prueba()
+})
+
+
 
 // Celdas actuales 
 let celdas = [];
 let positionPlayer = {}
-
+let paredes = []
 // Función para generar el tablero
 function cargarTablero(json) {
+    console.log("el json",json)
   const size = 1;
   // Limpiar celdas anteriores
   celdas.forEach(c => scena.remove(c));
   celdas = [];
+  paredes.forEach(p => scena.remove(p))
+  paredes = []
 
   for (let y = 0; y < json.alto; y++) {
     for (let x = 0; x < json.ancho; x++) {
-      let color = "#ff5c28";
+      let color = "#6d6d6d";
 
-      if (x === json.inicio[0] && y === json.inicio[1]) {
+      const isInicio = x === json.inicio[0] && y === json.inicio[1];
+      const isFin = x === json.fin[0] && y === json.fin[1];
+      const isPared = json.paredes.some(p => p[0] === x && p[1] === y);
+
+      if (isInicio) {
         color = "#00ff00"; // verde
         positionPlayer.x =  json.inicio[0]
         positionPlayer.y =  json.inicio[1]
-      } else if (x === json.fin[0] && y === json.fin[1]) {
+      } else if (isFin) {
         color = "#ff0000"; 
-      } else if (json.paredes.some(p => p[0] === x && p[1] === y)) {
+      } else if (isPared) {
         color = "#666666"; 
+        
+        const clone = gltfModel2.clone()
+        clone.position.set(x, 0, y)
+        scena.add(clone);
+        paredes.push(clone)
+        
+
       }
 
       const geometry = new THREE.PlaneGeometry(size, size);
@@ -47,14 +76,24 @@ function cargarTablero(json) {
       cell.position.set(x * size, 0, y * size);
       scena.add(cell);
       celdas.push(cell);
+
+
+
     }
   }
 
   // Centrar la cámara sobre el tablero
-  camera.position.z = json.alto + 2;
-  camera.position.y = 9;
+  let y_pos = 0
+  if (json.alto < 7){
+    y_pos = 8
+  }else{ 
+    y_pos = 12
+  }
+
+  camera.position.z = json.alto;
+  camera.position.y = y_pos;
   camera.position.x =  json.ancho/2
-  camera.rotation.x = -1
+  camera.rotation.x = -1.2
 }
 
 // Render loop
@@ -64,6 +103,16 @@ function render() {
     gltfModel.position.y = positionPlayer.y
     gltfModel.rotation.y += 0.01;
   }
+
+  if(gltfModel2){
+    paredes.forEach(element => {
+        gltfModel2.position.x = element.x
+        gltfModel2.position.z = element.y
+    });
+
+
+  }
+
   requestAnimationFrame(render);
   renderer.render(scena, camera);
 }
@@ -101,3 +150,27 @@ document.getElementById("empezarButtom").addEventListener("click", function() {
     //positionPlayer.y += 1
 
 })
+
+function prueba(){
+
+    
+const json2 = {
+    "ancho": 5,
+    "alto": 5,
+    "inicio": [0, 0],
+    "fin": [4, 4],
+    "paredes": [
+      [0, 4],
+      [1, 0],
+      [1, 1],
+      [1, 2],
+      [2, 4],
+      [3, 1],
+      [3, 2],
+      [3, 3],
+      [3, 4]
+    ]
+  }
+
+cargarTablero(json2)
+}
