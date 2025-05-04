@@ -15,31 +15,32 @@ scena.add(directionalLight);
 const loader = new THREE.GLTFLoader();
 let gltfModel = null;
 loader.load('car.glb', function (gltf) {
-    gltfModel = gltf.scene;
-    gltfModel.scale.set(0.1, 0.1, 0.1);
-    scena.add(gltf.scene);
+  gltfModel = gltf.scene;
+  gltfModel.scale.set(0.1, 0.1, 0.1);
+  scena.add(gltf.scene);
 });
 
 const loader2 = new THREE.GLTFLoader();
 let gltfModel2 = null;
-loader.load('cityWall2.glb', function(gltf) {
-    gltfModel2 = gltf.scene;
-    gltfModel2.scale.set(0.5, 0.5, 0.5);
-    //prueba()
+loader.load('cityWall2.glb', function (gltf) {
+  gltfModel2 = gltf.scene;
+  gltfModel2.scale.set(0.5, 0.5, 0.5);
+  //prueba()
 })
 
 
 
 // Celdas actuales
-let jsonActual; 
+let jsonActual;
 let celdas = [];
 let positionPlayer = {}
 let positionPlayerFinal = {}
 let paredes = []
 let route = []
+let reiniciar = false
 // Función para generar el tablero
 function cargarTablero(json) {
-    console.log("el json",json)
+  console.log("el json", json)
   const size = 1;
   // Limpiar celdas anteriores
   celdas.forEach(c => scena.remove(c));
@@ -57,20 +58,20 @@ function cargarTablero(json) {
 
       if (isInicio) {
         color = "#00ff00"; // verde
-        positionPlayer.x =  json.inicio[0]
-        positionPlayer.y =  json.inicio[1]
+        positionPlayer.x = json.inicio[0]
+        positionPlayer.y = json.inicio[1]
         gltfModel.position.x = positionPlayer.x
-        gltfModel.position.z = positionPlayer.y 
+        gltfModel.position.z = positionPlayer.y
       } else if (isFin) {
-        color = "#ff0000"; 
+        color = "#ff0000";
       } else if (isPared) {
-        color = "#666666"; 
-        
+        color = "#666666";
+
         const clone = gltfModel2.clone()
         clone.position.set(x, 0, y)
         scena.add(clone);
         paredes.push(clone)
-        
+
 
       }
 
@@ -89,23 +90,23 @@ function cargarTablero(json) {
 
   // Centrar la cámara sobre el tablero
   let y_pos = 0
-  if (json.alto < 7){
+  if (json.alto < 7) {
     y_pos = 8
-  }else{ 
+  } else {
     y_pos = 12
   }
 
   camera.position.z = json.alto;
   camera.position.y = y_pos;
-  camera.position.x =  json.ancho/2
+  camera.position.x = json.ancho / 2
   camera.rotation.x = -1.2
 }
 
 
 function moveTowards(target, current, speed = 0.02) {
-    if (Math.abs(target - current) < speed) return target;
-    return current + Math.sign(target - current) * speed;
-  }
+  if (Math.abs(target - current) < speed) return target;
+  return current + Math.sign(target - current) * speed;
+}
 
 // Render loop
 function render() {
@@ -114,23 +115,19 @@ function render() {
     gltfModel.position.y = positionPlayer.y
     gltfModel.rotation.y += 0.01;
 
-    if (positionPlayerFinal.x !== undefined && positionPlayerFinal.y !== undefined) {
-        gltfModel.position.x = moveTowards(positionPlayerFinal.x, gltfModel.position.x);
-        gltfModel.position.z = moveTowards(positionPlayerFinal.y, gltfModel.position.z); 
+    if(reiniciar){
+      reiniciar = false
+      gltfModel.position.x = positionPlayer.x
+      gltfModel.position.z = positionPlayer.y
     }
-
-
     
+    if (positionPlayerFinal.x !== undefined && positionPlayerFinal.y !== undefined) {
+      gltfModel.position.x = moveTowards(positionPlayerFinal.x, gltfModel.position.x);
+      gltfModel.position.z = moveTowards(positionPlayerFinal.y, gltfModel.position.z);
+    }  
+  
+
   }
-
-//   if(gltfModel2){
-//     paredes.forEach(element => {
-//         gltfModel2.position.x = element.x
-//         gltfModel2.position.z = element.y
-//     });
-
-//   }
-
   requestAnimationFrame(render);
   renderer.render(scena, camera);
 }
@@ -138,77 +135,101 @@ render();
 
 
 
-document.getElementById("cargarButtom").addEventListener("click", function() {
-    document.getElementById("fileInput").click();
+document.getElementById("cargarButtom").addEventListener("click", function () {
+  document.getElementById("fileInput").click();
 });
 
 
 document.getElementById("fileInput").addEventListener("change", function (event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      try {
-        const jsonData = JSON.parse(e.target.result);
-        console.log("JSON cargado:", jsonData);
-        cargarTablero(jsonData)
-        jsonActual = jsonData
-  
-      } catch (err) {
-        alert("El archivo no es un JSON válido.");
-      }
-    };
-    reader.readAsText(file);
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    try {
+      const jsonData = JSON.parse(e.target.result);
+      console.log("JSON cargado:", jsonData);
+      cargarTablero(jsonData)
+      jsonActual = jsonData
+      cargarAlgoritmo()
+
+    } catch (err) {
+      alert("El archivo no es un JSON válido.");
+    }
+  };
+  reader.readAsText(file);
 
 });
 
-document.getElementById("empezarButtom").addEventListener("click", function() {
-
-    const opcion = document.getElementById("algoritmoSelect").value
-    console.log(opcion)
-   // positionPlayer.x += 1
-    g = new Graph();
-    g.buildFromGrid(jsonActual);        
-    const inicio = jsonActual.inicio.join(","); 
-    const fin = jsonActual.fin.join(",");       
-
-    if(opcion === "BFS"){
-        const camino = g.bfs(inicio, fin);
-        console.log("Camino encontrado por bfs:", camino);
-        route = camino
-    }else if(opcion === "DFS"){
-
-    }else if (opcion === "STAR"){
-
-    }
+document.getElementById("empezarButtom").addEventListener("click", function () {
+  cargarAlgoritmo()
 })
 
+let position = 1
+function cargarAlgoritmo() {
+  const opcion = document.getElementById("algoritmoSelect").value
+  console.log(opcion)
+  //reiniciamos la posicion incial
+  positionPlayer.x = jsonActual.inicio[0]
+  positionPlayer.y = jsonActual.inicio[1]
+  positionPlayerFinal.x = undefined
+  positionPlayerFinal.y = undefined
+  position = 1;
+  reiniciar = true
+
+  g = new Graph();
+  g.buildFromGrid(jsonActual);
+  const inicio = jsonActual.inicio.join(",");
+  const fin = jsonActual.fin.join(",");
+
+  if (opcion === "BFS") {
+    const camino = g.bfs(inicio, fin);
+    console.log("Camino encontrado por bfs:", camino);
+    route = camino
+    alert("Algoritmo BFS cargado")
+  } else if (opcion === "DFS") {
+    const camino2 = g.dfs(inicio, fin);
+    console.log("Camino encontrado por dfs:", camino2);
+    route = camino2
+    alert("Algoritmo DFS/ cargado")
+  } else if (opcion === "STAR") {
+    const caminoA = g.aStar(inicio, fin);
+    console.log("Camino A*:", caminoA);
+    alert("Algoritmo STAR cargado")
+    route = caminoA
+  }
+}
+
+
+
 document.getElementById("atrasButtom").addEventListener("click", function () {
-    // Acción para mover hacia atrás
-    console.log("Mover hacia atrás");
+  console.log("Mover hacia atrás");
+  // Nos aseguramos de no ir más allá del inicio
+  if (!route || position <= 1) return;
 
-  });
-  
-  let position = 1
-  document.getElementById("adelanteButtom").addEventListener("click", function () {
-    // Acción para mover hacia adelante
-    console.log("Mover hacia adelante");
-    console.log(route[1][0])
-   if(!route || position >= route.length) return;
+  position--; 
+  positionPlayerFinal.x = route[position - 1][0];
+  positionPlayerFinal.y = route[position - 1][1];
 
-   positionPlayerFinal.x = route[position][0]
-    positionPlayerFinal.y = route[position][1]
-    position++;
+  console.log("Posición final:", positionPlayerFinal);
+});
 
-    console.log(positionPlayerFinal)
+document.getElementById("adelanteButtom").addEventListener("click", function () {
+  console.log("Mover hacia adelante");
+  if (!route || position >= route.length) return;
 
-  });
+  positionPlayerFinal.x = route[position][0]
+  positionPlayerFinal.y = route[position][1]
+  position++;
 
-function prueba(){
+  console.log(positionPlayerFinal)
 
-    
-const json2 = {
+});
+
+function prueba() {
+
+
+  const json2 = {
     "ancho": 5,
     "alto": 5,
     "inicio": [0, 0],
@@ -226,5 +247,5 @@ const json2 = {
     ]
   }
 
-cargarTablero(json2)
+  cargarTablero(json2)
 }
