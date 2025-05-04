@@ -28,6 +28,39 @@ loader.load('cityWall2.glb', function (gltf) {
   //prueba()
 })
 
+const loader3 = new THREE.GLTFLoader();
+let gltfModel3 = null;
+loader.load('stoneWall.glb', function (gltf) {
+  gltfModel3 = gltf.scene;
+  gltfModel3.scale.set(0.68, 1, 4);
+  //prueba()
+  console.log("modelo",gltfModel3)
+
+  const targetMesh = gltfModel3.getObjectByName("Wall_SecondAge_1");
+  const targetMesh2 = gltfModel3.getObjectByName("Wall_SecondAge_2"); 
+  gltfModel3.traverse((child) => {
+    if (targetMesh && targetMesh.material) {
+      console.log("MESHH", child.name)
+      targetMesh.material = targetMesh.material.clone(); // Importante: clona para no afectar otros clones
+      targetMesh.material.color.set("#686C7F"); // Color nuevo (puede ser string o THREE.Color)
+    }
+    if (targetMesh2 && targetMesh2.material) {
+      console.log("MESHH", child.name)
+      targetMesh2.material = targetMesh2.material.clone(); // Importante: clona para no afectar otros clones
+      targetMesh2.material.color.set("#D9D9D9"); // Color nuevo (puede ser string o THREE.Color)
+    }
+  });
+
+
+})
+
+const loader4 = new THREE.GLTFLoader();
+let gltfModel4 = null;
+loader.load('building.glb', function (gltf) {
+  gltfModel4 = gltf.scene;
+  gltfModel4.scale.set(2, 1, 2);
+  //prueba()
+})
 
 
 // Celdas actuales
@@ -36,8 +69,10 @@ let celdas = [];
 let positionPlayer = {}
 let positionPlayerFinal = {}
 let paredes = []
+let suelo = []
 let route = []
 let reiniciar = false
+let camPredeterminado = {}
 // Función para generar el tablero
 function cargarTablero(json) {
   console.log("el json", json)
@@ -48,6 +83,7 @@ function cargarTablero(json) {
   paredes.forEach(p => scena.remove(p))
   paredes = []
 
+  let ocupados = []
   for (let y = 0; y < json.alto; y++) {
     for (let x = 0; x < json.ancho; x++) {
       let color = "#6d6d6d";
@@ -72,7 +108,6 @@ function cargarTablero(json) {
         scena.add(clone);
         paredes.push(clone)
 
-
       }
 
       const geometry = new THREE.PlaneGeometry(size, size);
@@ -82,8 +117,7 @@ function cargarTablero(json) {
       cell.position.set(x * size, 0, y * size);
       scena.add(cell);
       celdas.push(cell);
-
-
+      ocupados.push([x, y])
 
     }
   }
@@ -96,10 +130,118 @@ function cargarTablero(json) {
     y_pos = 12
   }
 
+  cargarSuelo(json, ocupados)
+
   camera.position.z = json.alto;
   camera.position.y = y_pos;
   camera.position.x = json.ancho / 2
   camera.rotation.x = -1.2
+
+  camPredeterminado.z = json.alto;
+  camPredeterminado.y = y_pos;
+  camPredeterminado.x = json.ancho / 2
+}
+
+function cargarSuelo(json, ocupados) {
+  console.log("entre")
+  suelo.forEach(p => scena.remove(p))
+  suelo = []
+
+
+  const geometry = new THREE.PlaneGeometry(1, 1);
+  const material = new THREE.MeshBasicMaterial({ color: "#768294", side: THREE.DoubleSide });
+
+  //esquinas
+  const cellEsquina1 = new THREE.Mesh(geometry, material);
+  cellEsquina1.rotation.x = -Math.PI / 2;
+  cellEsquina1.position.set(- 1, 0, -1);
+  scena.add(cellEsquina1)
+  suelo.push(cellEsquina1)
+  const cloneEsquina = gltfModel4.clone()
+  cloneEsquina.position.set(- 1, 0, -1)
+  scena.add(cloneEsquina);
+  suelo.push(cloneEsquina)
+
+
+  const cellEsquina2 = new THREE.Mesh(geometry, material);
+  cellEsquina2.rotation.x = -Math.PI / 2;
+  cellEsquina2.position.set(json.ancho, 0, -1);
+  scena.add(cellEsquina2)
+  suelo.push(cellEsquina2)
+  const cloneEsquina2 = gltfModel4.clone()
+  cloneEsquina2.position.set(json.ancho, 0, -1)
+  scena.add(cloneEsquina2);
+  suelo.push(cloneEsquina2)
+
+
+  for (let x = 0; x < json.ancho; x++) {
+    const clone = gltfModel3.clone()
+    clone.position.set(x, 0.1, -1)
+    scena.add(clone);
+    suelo.push(clone)
+
+    const cell = new THREE.Mesh(geometry, material);
+    cell.rotation.x = -Math.PI / 2;
+    cell.position.set(x, 0, -1);
+    scena.add(cell)
+    suelo.push(cell)
+  }
+
+  for (let y = 0; y < json.alto; y++) {
+    const clone = gltfModel3.clone()
+    clone.position.set(-1, 0.1, y)
+    clone.rotation.y = 1.57
+    scena.add(clone);
+    suelo.push(clone)
+
+    const cell = new THREE.Mesh(geometry, material);
+    cell.rotation.x = -Math.PI / 2;
+    cell.position.set(-1, 0, y);
+    scena.add(cell)
+    suelo.push(cell)
+
+
+    const clone2 = gltfModel3.clone()
+    clone2.position.set(json.ancho, 0.1, y)
+    clone2.rotation.y = 1.57
+    scena.add(clone2);
+    suelo.push(clone2)
+
+    const cell2 = new THREE.Mesh(geometry, material);
+    cell2.rotation.x = -Math.PI / 2;
+    cell2.position.set(json.ancho, 0, y);
+    scena.add(cell2)
+    suelo.push(cell2)
+  }
+
+
+
+  // for (let y = 0; y < json.alto + 20; y++) {
+  //   for (let x = 0; x < json.ancho ; x++) {
+  //     const isInicio = x === json.inicio[0] && y === json.inicio[1];
+  //     const isFin = x === json.fin[0] && y === json.fin[1];
+  //     const isPared = json.paredes.some(p => p[0] === x && p[1] === y);
+  //     const isOcupado = ocupados.some(([ox, oy]) => ox === x && oy === y);
+  //     if (!isOcupado) {
+  //       const clone = gltfModel3.clone()
+  //       clone.position.set(x, 0.1, y)
+  //       scena.add(clone);
+  //       suelo.push(clone)
+  //     }
+  //   }
+  // }
+
+
+  // for (let y = -20; y < 0; y++) {
+  //   for (let x = -20; x < 0; x++) {
+  //       const clone = gltfModel3.clone()
+  //       clone.position.set(x, 0.1, y)
+  //       scena.add(clone);
+  //       suelo.push(clone)
+  //   }
+  // }
+
+
 }
 
 
@@ -115,17 +257,17 @@ function render() {
     gltfModel.position.y = positionPlayer.y
     gltfModel.rotation.y += 0.01;
 
-    if(reiniciar){
+    if (reiniciar) {
       reiniciar = false
       gltfModel.position.x = positionPlayer.x
       gltfModel.position.z = positionPlayer.y
     }
-    
+
     if (positionPlayerFinal.x !== undefined && positionPlayerFinal.y !== undefined) {
       gltfModel.position.x = moveTowards(positionPlayerFinal.x, gltfModel.position.x);
       gltfModel.position.z = moveTowards(positionPlayerFinal.y, gltfModel.position.z);
-    }  
-  
+    }
+
 
   }
   requestAnimationFrame(render);
@@ -207,7 +349,7 @@ document.getElementById("atrasButtom").addEventListener("click", function () {
   // Nos aseguramos de no ir más allá del inicio
   if (!route || position <= 1) return;
 
-  position--; 
+  position--;
   positionPlayerFinal.x = route[position - 1][0];
   positionPlayerFinal.y = route[position - 1][1];
 
@@ -224,6 +366,26 @@ document.getElementById("adelanteButtom").addEventListener("click", function () 
 
   console.log(positionPlayerFinal)
 
+});
+
+document.getElementById("camLeft").addEventListener("click", () => {
+  camera.position.x -= 1;
+});
+
+document.getElementById("camRight").addEventListener("click", () => {
+  camera.position.x += 1;
+});
+
+document.getElementById("camUp").addEventListener("click", () => {
+  camera.position.z -= 1;
+});
+
+document.getElementById("camDown").addEventListener("click", () => {
+  camera.position.z += 1;
+});
+
+document.getElementById("camReset").addEventListener("click", () => {
+  camera.position.set(camPredeterminado.x, camPredeterminado.y, camPredeterminado.z); // ajusta según tus valores por defecto
 });
 
 function prueba() {

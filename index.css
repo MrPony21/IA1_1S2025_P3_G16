@@ -75,3 +75,32 @@ canvas {
     left: 20px;
     z-index: 10;
 }
+
+.joystick-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: grid;
+    grid-template-columns: auto auto auto;
+    grid-gap: 5px;
+  }
+  
+  .joystick-row {
+    display: contents;
+
+  }
+  
+  .joystick-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+    background-color: #ddd;
+    border: 1px solid #999;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .joystick-btn.invisible {
+    visibility: hidden;
+  }
+  
