@@ -10,128 +10,31 @@
 </head>
 
 <body>
-  <!-- <script>
-    const mapa = {
-      "ancho": 5,
-      "alto": 5,
-      "inicio": [0, 0],
-      "fin": [4, 4],
-      "paredes": [
-        [0, 4],
-        [1, 0],
-        [1, 1],
-        [1, 2],
-        [2, 4],
-        [3, 1],
-        [3, 2],
-        [3, 3],
-        [3, 4]
-      ]
-    }
 
+  <div class="select-container">
+    <label for="mapSelect">Seleccionar algoritmo:</label>
+    <select id="algoritmoSelect">
+      <option value="BFS">BFS</option>
+      <option value="DFS">DFS</option>
+      <option value="STAR">STAR</option>
+    </select>
+  </div>
+  <div class="controls-container">
+    <button id="empezarButtom">Empezar</button>
+    <button id="atrasButtom" class="control-buttom">< </button>
+    <button id="adelanteButtom" class="control-buttom">></button>
 
-    let scena = new THREE.Scene();
-    let camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+    <input type="file" id="fileInput" accept=".json" style="display: none;">
+    <button id="cargarButtom">Cargar JSON</button>
+  </div>
 
-    let renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
-
-
-    //CELDAS
-    const size = 1
-    for (let y = 0; y < mapa.alto; y++) {
-      for (let x = 0; x < mapa.ancho; x++) {
-        let color = "#ff5c28";
-
-        if (x === mapa.inicio[0] && y === mapa.inicio[1]) {
-          color = "#00ff00"
-        }
-
-        else if (x === mapa.fin[0] && y === mapa.fin[1]) {
-          color = "#ff0000"
-        }
-
-        // Verifica si es pared
-        else if (mapa.paredes.some(p => p[0] === x && p[1] === y)) {
-          color = "#666666"; // gris
-        }
-
-        const geometry = new THREE.PlaneGeometry(size, size);
-        const material = new THREE.MeshBasicMaterial({ color: color, side: THREE.DoubleSide });
-        const cell = new THREE.Mesh(geometry, material);
-
-        cell.rotation.x = -Math.PI / 2;
-
-        // Posicionamos en el espacio (centramos usando size/2)
-        cell.position.set(x * size, 0, y * size);
-        scena.add(cell);
-
-      }
-    }
-
-
-
-
-
-    // let geometry = new THREE.BoxGeometry(1, 1, 3);
-    // let material = new THREE.MeshBasicMaterial({ color: "#c35f00" });
-    // let cube = new THREE.Mesh(geometry, material);
-    // cube.position.set(2, 0, 0); 
-    // scena.add(cube);
-
-    // let geometry2 = new THREE.BoxGeometry(1, 1, 3);
-    // let material2 = new THREE.MeshBasicMaterial({ color: "#c35f00" });
-    // let cube2 = new THREE.Mesh(geometry2, material2);
-    // cube2.position.set(0, 0, -2); 
-    // cube2.rotation.y = 1.5
-    // scena.add(cube2);
-
-    // let geometry3 = new THREE.BoxGeometry(1, 1, 3);
-    // let material3 = new THREE.MeshBasicMaterial({ color: "#c35f00" });
-    // let cube3 = new THREE.Mesh(geometry3, material3);
-    // cube3.position.set(-2, 0, 0); 
-    // // cube3.rotation.y = 1.5
-    // scena.add(cube3);
-
-    const ambientLight = new THREE.AmbientLight(0x404040, 3); // luz general tenue
-    scena.add(ambientLight);
-
-    const loader = new THREE.GLTFLoader();
-    let gltfModel = null;
-    let charac;
-    loader.load('Bob.glb', function (gltf) {
-      gltfModel = gltf.scene
-      scena.add(gltf.scene);
-    });
-
-    camera.position.z = 6;
-    camera.position.y = 8;
-    camera.position.x = 1
-    camera.rotation.x = -1
-
-    function render() {
-      if (gltfModel) {
-        //gltfModel.rotation.x += 0.01;
-        gltfModel.rotation.y += 0.01;
-
-      }
-
-      requestAnimationFrame(render);
-      renderer.render(scena, camera);
-    }
-    render();
-  </script> -->
-  <button id="cargarButtom">Cargar JSON</button>
-  <input type="file" id="fileInput" accept=".json" style="display: none;">
-  <button id="empezarButtom">Empezar</button>
 
   <script src="https://cdn.jsdelivr.net/npm/three@0.138.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.138.0/examples/js/loaders/GLTFLoader.js"></script>
-<script src="index.js"></script>
-<script src="graph.js"></script>
-<script src="transformation.js"></script>
-<script src="prueba.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.138.0/examples/js/loaders/GLTFLoader.js"></script>
+  <script src="index.js"></script>
+  <script src="graph.js"></script>
+  <script src="transformation.js"></script>
+  <script src="prueba.js"></script>
 
 </body>
 

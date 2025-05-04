@@ -25,15 +25,18 @@ let gltfModel2 = null;
 loader.load('cityWall2.glb', function(gltf) {
     gltfModel2 = gltf.scene;
     gltfModel2.scale.set(0.5, 0.5, 0.5);
-    prueba()
+    //prueba()
 })
 
 
 
-// Celdas actuales 
+// Celdas actuales
+let jsonActual; 
 let celdas = [];
 let positionPlayer = {}
+let positionPlayerFinal = {}
 let paredes = []
+let route = []
 // Función para generar el tablero
 function cargarTablero(json) {
     console.log("el json",json)
@@ -56,6 +59,8 @@ function cargarTablero(json) {
         color = "#00ff00"; // verde
         positionPlayer.x =  json.inicio[0]
         positionPlayer.y =  json.inicio[1]
+        gltfModel.position.x = positionPlayer.x
+        gltfModel.position.z = positionPlayer.y 
       } else if (isFin) {
         color = "#ff0000"; 
       } else if (isPared) {
@@ -96,22 +101,35 @@ function cargarTablero(json) {
   camera.rotation.x = -1.2
 }
 
+
+function moveTowards(target, current, speed = 0.02) {
+    if (Math.abs(target - current) < speed) return target;
+    return current + Math.sign(target - current) * speed;
+  }
+
 // Render loop
 function render() {
   if (gltfModel) {
-    gltfModel.position.x = positionPlayer.x
+    //gltfModel.position.x = positionPlayer.x    
     gltfModel.position.y = positionPlayer.y
     gltfModel.rotation.y += 0.01;
+
+    if (positionPlayerFinal.x !== undefined && positionPlayerFinal.y !== undefined) {
+        gltfModel.position.x = moveTowards(positionPlayerFinal.x, gltfModel.position.x);
+        gltfModel.position.z = moveTowards(positionPlayerFinal.y, gltfModel.position.z); 
+    }
+
+
+    
   }
 
-  if(gltfModel2){
-    paredes.forEach(element => {
-        gltfModel2.position.x = element.x
-        gltfModel2.position.z = element.y
-    });
+//   if(gltfModel2){
+//     paredes.forEach(element => {
+//         gltfModel2.position.x = element.x
+//         gltfModel2.position.z = element.y
+//     });
 
-
-  }
+//   }
 
   requestAnimationFrame(render);
   renderer.render(scena, camera);
@@ -135,6 +153,7 @@ document.getElementById("fileInput").addEventListener("change", function (event)
         const jsonData = JSON.parse(e.target.result);
         console.log("JSON cargado:", jsonData);
         cargarTablero(jsonData)
+        jsonActual = jsonData
   
       } catch (err) {
         alert("El archivo no es un JSON válido.");
@@ -146,10 +165,45 @@ document.getElementById("fileInput").addEventListener("change", function (event)
 
 document.getElementById("empezarButtom").addEventListener("click", function() {
 
-    positionPlayer.x += 1
-    //positionPlayer.y += 1
+    const opcion = document.getElementById("algoritmoSelect").value
+    console.log(opcion)
+   // positionPlayer.x += 1
+    g = new Graph();
+    g.buildFromGrid(jsonActual);        
+    const inicio = jsonActual.inicio.join(","); 
+    const fin = jsonActual.fin.join(",");       
 
+    if(opcion === "BFS"){
+        const camino = g.bfs(inicio, fin);
+        console.log("Camino encontrado por bfs:", camino);
+        route = camino
+    }else if(opcion === "DFS"){
+
+    }else if (opcion === "STAR"){
+
+    }
 })
+
+document.getElementById("atrasButtom").addEventListener("click", function () {
+    // Acción para mover hacia atrás
+    console.log("Mover hacia atrás");
+
+  });
+  
+  let position = 1
+  document.getElementById("adelanteButtom").addEventListener("click", function () {
+    // Acción para mover hacia adelante
+    console.log("Mover hacia adelante");
+    console.log(route[1][0])
+   if(!route || position >= route.length) return;
+
+   positionPlayerFinal.x = route[position][0]
+    positionPlayerFinal.y = route[position][1]
+    position++;
+
+    console.log(positionPlayerFinal)
+
+  });
 
 function prueba(){
 
