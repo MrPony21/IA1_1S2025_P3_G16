@@ -341,11 +341,25 @@ function cargarAlgoritmo() {
     console.log("Camino encontrado por bfs:", camino);
     route = camino
     alert("Algoritmo BFS cargado")
-  } else if (opcion === "DFS") {
-    const camino2 = g.dfs(inicio, fin);
-    console.log("Camino encontrado por dfs:", camino2);
+  } else if (opcion === "DIKSTRARETROCESO") {
+    const camino2 = g.dijkstraConRegresos(inicio, fin);
+    console.log("Camino encontrado por DIKSTRARETROCESO:", camino2);
     route = camino2
-    alert("Algoritmo DFS/ cargado")
+    alert("Algoritmo DIKSTRARETROCESO / cargado")
+
+
+  } else if (opcion === "DIKSTRA") {
+    const camino3 = g.dijkstra(inicio, fin);
+    console.log("Camino encontrado por DIJKSTRA:", camino3);
+    route = camino3
+    alert("Algoritmo DIKSTRA / cargado")
+
+  } else if (opcion === "STARRETROCESO"){ 
+    const camino4 = g.aStarConRegresos(inicio, fin);
+    console.log("Camino encontrado por STARRETROCESO:", camino4);
+    route = camino4
+    alert("Algoritmo STARRETROCESO / cargado")
+
   } else if (opcion === "STAR") {
     const caminoA = g.aStar(inicio, fin);
     console.log("Camino A*:", caminoA);
