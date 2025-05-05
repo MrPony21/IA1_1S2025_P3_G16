@@ -25,93 +25,119 @@ class Graph {
     bfs(start, goal) {
         const visited = new Set();
         const queue = [[start]];
-        console.log(`Iniciando BFS desde ${start} hasta ${goal}`);
+        const pasos = [];
 
         while (queue.length > 0) {
-            const path = queue.shift();
-            const node = path[path.length - 1];
-            console.log(`Explorando nodo: ${node}, camino actual: ${path}`);
-
-            if (node === goal) {
-                console.log(`Meta encontrada: ${node}`);
-                return path.map(coord => coord.split(',').map(Number));
-            }
+            const path = queue.shift(); // camino actual
+            const node = path[path.length - 1]; // último nodo
 
             if (!visited.has(node)) {
                 visited.add(node);
-                console.log(`Marcando ${node} como visitado`);
+                pasos.push(node); // registrar visita
+
+                if (node === goal) {
+                    return pasos.map(coord => coord.split(',').map(Number));
+                }
+
+                let hasUnvisited = false;
 
                 for (let neighbor of this.adjacency[node] || []) {
-                    console.log(`→ Encolando vecino: ${neighbor}`);
-                    queue.push([...path, neighbor]);
+                    if (!visited.has(neighbor)) {
+                        hasUnvisited = true;
+                        queue.push([...path, neighbor]);
+                    }
+                }
+
+                if (!hasUnvisited && path.length > 1) {
+                    // simulamos retroceso al nodo anterior
+                    const previous = path[path.length - 2];
+                    pasos.push(previous);
                 }
             }
         }
 
-        console.log("No se encontró un camino");
-        return null;
+        return pasos.map(coord => coord.split(',').map(Number));
     }
+
+
+
+
+
 
 
     dfs(start, goal) {
         const visited = new Set();
+        const pasos = [];
 
         console.log(`Iniciando DFS desde ${start} hasta ${goal}`);
 
-        const dfsHelper = (node, path) => {
-            console.log(`Visitando nodo: ${node}, camino actual: ${path}`);
+        const dfsHelper = (node) => {
+            visited.add(node);
+            pasos.push({ tipo: 'visita', nodo: node });
+            console.log(`Visitando nodo: ${node}`);
 
             if (node === goal) {
                 console.log(`Meta encontrada: ${node}`);
-                return path.map(coord => coord.split(',').map(Number));
+                pasos.push({ tipo: 'meta', nodo: node });
+                return true;
             }
-
-            visited.add(node);
-            console.log(`Marcando ${node} como visitado`);
 
             for (let neighbor of this.adjacency[node] || []) {
                 if (!visited.has(neighbor)) {
                     console.log(`→ Explorando vecino: ${neighbor}`);
-                    const result = dfsHelper(neighbor, [...path, neighbor]);
-                    if (result) return result;
+                    if (dfsHelper(neighbor)) {
+                        return true;
+                    }
                 }
             }
 
+            pasos.push({ tipo: 'retroceso', nodo: node });
             console.log(`Retrocediendo desde: ${node}`);
-            return null;
+            return false;
         };
 
-        return dfsHelper(start, [start]);
+        dfsHelper(start);
+
+        return pasos.map(p => ({
+            tipo: p.tipo,
+            nodo: p.nodo.split(',').map(Number)
+        }));
     }
 
-    aStar(start, goal) {
-        const openSet = [start]; // nodos por explorar
-        const cameFrom = {};     // para reconstruir el camino
 
-        const gScore = { [start]: 0 }; // coste real
-        const fScore = { [start]: this.heuristic(start, goal) }; // coste estimado total
+
+    aStar(start, goal) {
+        const openSet = [start];
+        const cameFrom = {};
+
+        const gScore = { [start]: 0 };
+        const fScore = { [start]: this.heuristic(start, goal) };
+
+        const nodosVisitados = [];
 
         console.log(`Iniciando A* desde ${start} hasta ${goal}`);
 
         while (openSet.length > 0) {
-            // Elegir el nodo con menor fScore
             openSet.sort((a, b) => (fScore[a] ?? Infinity) - (fScore[b] ?? Infinity));
             const current = openSet.shift();
+
             console.log(`Explorando nodo: ${current}`);
+            nodosVisitados.push(current);
 
             if (current === goal) {
                 console.log("Meta alcanzada");
-                return this.reconstructPath(cameFrom, current);
+                return nodosVisitados.map(coord => coord.split(',').map(Number));
             }
 
             for (let neighbor of this.adjacency[current] || []) {
-                const tentativeG = gScore[current] + 1; // cada paso cuesta 1
+                const tentativeG = gScore[current] + 1;
                 console.log(`  Evaluando vecino: ${neighbor}, costo tentativo: ${tentativeG}`);
 
                 if (tentativeG < (gScore[neighbor] ?? Infinity)) {
                     cameFrom[neighbor] = current;
                     gScore[neighbor] = tentativeG;
                     fScore[neighbor] = tentativeG + this.heuristic(neighbor, goal);
+
                     console.log(`  → Actualizado: g=${gScore[neighbor]}, h=${this.heuristic(neighbor, goal)}, f=${fScore[neighbor]}`);
 
                     if (!openSet.includes(neighbor)) {
@@ -123,13 +149,14 @@ class Graph {
         }
 
         console.log("No se encontró un camino");
-        return null;
+        return nodosVisitados.map(coord => coord.split(',').map(Number));
     }
+
 
     heuristic(a, b) {
         const [x1, y1] = a.split(',').map(Number);
         const [x2, y2] = b.split(',').map(Number);
-        return Math.abs(x1 - x2) + Math.abs(y1 - y2);
+        return Math.abs(x1 - x2) + Math.abs(y1 - y2); // Heurística Manhattan
     }
 
     reconstructPath(cameFrom, current) {
@@ -141,7 +168,150 @@ class Graph {
         console.log("Camino reconstruido:", totalPath);
         return totalPath.map(coord => coord.split(',').map(Number));
     }
-    
+
+    aStarConRegresos(start, goal) {
+        const openSet = [start];
+        const cameFrom = {};
+        const gScore = { [start]: 0 };
+        const fScore = { [start]: this.heuristic(start, goal) };
+        const pasos = [];
+        const visitados = new Set();
+
+        while (openSet.length > 0) {
+            openSet.sort((a, b) => (fScore[a] ?? Infinity) - (fScore[b] ?? Infinity));
+            const current = openSet.shift();
+
+            pasos.push(current);
+            visitados.add(current);
+            console.log(`Explorando nodo: ${current}`);
+
+            if (current === goal) {
+                console.log("Meta alcanzada");
+                return pasos.map(coord => coord.split(',').map(Number));
+            }
+
+            let progreso = false;
+
+            for (let neighbor of this.adjacency[current] || []) {
+                const tentativeG = gScore[current] + 1;
+
+                if (tentativeG < (gScore[neighbor] ?? Infinity)) {
+                    cameFrom[neighbor] = current;
+                    gScore[neighbor] = tentativeG;
+                    fScore[neighbor] = tentativeG + this.heuristic(neighbor, goal);
+
+                    if (!visitados.has(neighbor) && !openSet.includes(neighbor)) {
+                        openSet.push(neighbor);
+                        console.log(`  → Añadido a la cola: ${neighbor}`);
+                        progreso = true;
+                    }
+                }
+            }
+
+            if (!progreso && cameFrom[current]) {
+                pasos.push(cameFrom[current]);
+                console.log(`  → Sin progreso. Regresando a: ${cameFrom[current]}`);
+            }
+        }
+
+        console.log("No se encontró un camino");
+        return pasos.map(coord => coord.split(',').map(Number));
+    }
+
+
+    dijkstra(start, goal) {
+        const distances = { [start]: 0 };
+        const visited = new Set();
+        const cameFrom = {};
+        const queue = [start];
+        const nodosVisitados = [];
+
+        console.log(`Iniciando Dijkstra desde ${start} hasta ${goal}`);
+
+        while (queue.length > 0) {
+            // Ordenar por distancia acumulada
+            queue.sort((a, b) => (distances[a] ?? Infinity) - (distances[b] ?? Infinity));
+            const current = queue.shift();
+
+            if (visited.has(current)) continue;
+            visited.add(current);
+            nodosVisitados.push(current);
+            console.log(`Explorando nodo: ${current}, distancia: ${distances[current]}`);
+
+            if (current === goal) {
+                console.log("Meta alcanzada");
+                return nodosVisitados.map(coord => coord.split(',').map(Number));
+            }
+
+            for (let neighbor of this.adjacency[current] || []) {
+                const tentative = (distances[current] ?? Infinity) + 1; // Peso uniforme
+                console.log(`  Evaluando vecino: ${neighbor}, distancia tentativa: ${tentative}`);
+
+                if (tentative < (distances[neighbor] ?? Infinity)) {
+                    distances[neighbor] = tentative;
+                    cameFrom[neighbor] = current;
+                    queue.push(neighbor);
+                    console.log(`  → Distancia actualizada. Nuevo valor: ${tentative}`);
+                }
+            }
+        }
+
+        console.log("No se encontró un camino");
+        return nodosVisitados.map(coord => coord.split(',').map(Number));
+    }
+
+
+    dijkstraConRegresos(start, goal) {
+        const distances = { [start]: 0 };
+        const cameFrom = {};
+        const visited = new Set();
+        const pasos = [];
+
+        const queue = [start];
+
+        while (queue.length > 0) {
+            // Elegir el nodo con menor distancia acumulada
+            queue.sort((a, b) => (distances[a] ?? Infinity) - (distances[b] ?? Infinity));
+            const current = queue.shift();
+
+            pasos.push(current);
+            visited.add(current);
+            console.log(`Explorando nodo: ${current}`);
+
+            if (current === goal) {
+                console.log("Meta alcanzada");
+                return pasos.map(c => c.split(',').map(Number));
+            }
+
+            let progreso = false;
+
+            for (let neighbor of this.adjacency[current] || []) {
+                const alt = distances[current] + 1;
+
+                if (alt < (distances[neighbor] ?? Infinity)) {
+                    distances[neighbor] = alt;
+                    cameFrom[neighbor] = current;
+
+                    if (!visited.has(neighbor) && !queue.includes(neighbor)) {
+                        queue.push(neighbor);
+                        progreso = true;
+                        console.log(`  → Añadido vecino: ${neighbor} con distancia: ${alt}`);
+                    }
+                }
+            }
+
+            // Simular retroceso si no hubo progreso
+            if (!progreso && cameFrom[current]) {
+                pasos.push(cameFrom[current]);
+                console.log(`  → Sin progreso. Regresando a: ${cameFrom[current]}`);
+            }
+        }
+
+        console.log("No se encontró un camino");
+        return pasos.map(c => c.split(',').map(Number));
+    }
+
+
 
 
 
