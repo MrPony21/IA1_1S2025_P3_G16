@@ -14,7 +14,7 @@ scena.add(directionalLight);
 
 const loader = new THREE.GLTFLoader();
 let gltfModel = null;
-loader.load('car.glb', function (gltf) {
+loader.load('./models/car.glb', function (gltf) {
   gltfModel = gltf.scene;
   gltfModel.scale.set(0.1, 0.1, 0.1);
   scena.add(gltf.scene);
@@ -22,15 +22,14 @@ loader.load('car.glb', function (gltf) {
 
 const loader2 = new THREE.GLTFLoader();
 let gltfModel2 = null;
-loader.load('cityWall2.glb', function (gltf) {
+loader.load('./models/cityWall2.glb', function (gltf) {
   gltfModel2 = gltf.scene;
   gltfModel2.scale.set(0.5, 0.5, 0.5);
-  //prueba()
 })
 
 const loader3 = new THREE.GLTFLoader();
 let gltfModel3 = null;
-loader.load('stoneWall.glb', function (gltf) {
+loader.load('./models/stoneWall.glb', function (gltf) {
   gltfModel3 = gltf.scene;
   gltfModel3.scale.set(0.68, 1, 4);
   //prueba()
@@ -56,10 +55,9 @@ loader.load('stoneWall.glb', function (gltf) {
 
 const loader4 = new THREE.GLTFLoader();
 let gltfModel4 = null;
-loader.load('building.glb', function (gltf) {
+loader.load('./models/building.glb', function (gltf) {
   gltfModel4 = gltf.scene;
   gltfModel4.scale.set(2, 1, 2);
-  //prueba()
 })
 
 
