@@ -251,26 +251,40 @@ function moveTowards(target, current, speed = 0.02) {
 // Render loop
 function render() {
   if (gltfModel) {
-    //gltfModel.position.x = positionPlayer.x    
-    gltfModel.position.y = positionPlayer.y
-    gltfModel.rotation.y += 0.01;
+    gltfModel.position.y = positionPlayer.y;
 
     if (reiniciar) {
-      reiniciar = false
-      gltfModel.position.x = positionPlayer.x
-      gltfModel.position.z = positionPlayer.y
+      reiniciar = false;
+      gltfModel.position.x = positionPlayer.x;
+      gltfModel.position.z = positionPlayer.y;
     }
 
     if (positionPlayerFinal.x !== undefined && positionPlayerFinal.y !== undefined) {
-      gltfModel.position.x = moveTowards(positionPlayerFinal.x, gltfModel.position.x);
-      gltfModel.position.z = moveTowards(positionPlayerFinal.y, gltfModel.position.z);
+      const currentX = gltfModel.position.x;
+      const currentZ = gltfModel.position.z;
+      const targetX = positionPlayerFinal.x;
+      const targetZ = positionPlayerFinal.y;
+
+      // Calcular dirección del movimiento
+      const dx = targetX - currentX;
+      const dz = targetZ - currentZ;
+
+      // Solo girar si hay movimiento
+      if (dx !== 0 || dz !== 0) {
+        const angle = Math.atan2(dx, dz); // Nota: atan2(dx, dz) para orientar correctamente en Y
+        gltfModel.rotation.y = angle  + Math.PI;
+      }
+
+      // Movimiento suave
+      gltfModel.position.x = moveTowards(targetX, currentX);
+      gltfModel.position.z = moveTowards(targetZ, currentZ);
     }
-
-
   }
+
   requestAnimationFrame(render);
   renderer.render(scena, camera);
 }
+
 render();
 
 
